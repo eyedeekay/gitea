@@ -28,6 +28,9 @@ func GetProxyURL() string {
 	}
 
 	if setting.Proxy.ProxyURL == "" {
+		if os.Getenv("ALL_PROXY") != "" {
+			return os.Getenv("ALL_PROXY")
+		}
 		if os.Getenv("http_proxy") != "" {
 			return os.Getenv("http_proxy")
 		}
@@ -90,7 +93,7 @@ func EnvWithProxy(u *url.URL) []string {
 	envs := os.Environ()
 	if strings.EqualFold(u.Scheme, "http") || strings.EqualFold(u.Scheme, "https") {
 		if Match(u.Host) {
-			envs = append(envs, "https_proxy="+GetProxyURL())
+			envs = append(envs, "https_proxy="+GetProxyURL(), "http_proxy="+GetProxyURL(), "ALL_PROXY="+GetProxyURL())
 		}
 	}
 
