@@ -9,6 +9,8 @@ import (
 	"net"
 	"syscall"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 // NewDialContext returns a DialContext for Transport, the DialContext will do allow/block list check
@@ -21,11 +23,9 @@ func NewDialContext(usage string, allowList, blockList *HostMatchList) func(ctx 
 	//   transport.DialContext addrOrHost=domain.com:80
 	//   dialer.Control tcp4:11.22.33.44:80
 	return func(ctx context.Context, network, addrOrHost string) (net.Conn, error) {
-		dialer := net.Dialer{
-			// default values comes from http.DefaultTransport
+		dialer := proxy.NewPerHost(proxy.FromEnvironmentUsing(&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-
 			Control: func(network, ipAddr string, c syscall.RawConn) (err error) {
 				var host string
 				if host, _, err = net.SplitHostPort(addrOrHost); err != nil {
@@ -51,7 +51,7 @@ func NewDialContext(usage string, allowList, blockList *HostMatchList) func(ctx 
 				// otherwise, we always follow the blocked list
 				return blockedError
 			},
-		}
+		}), nil)
 		return dialer.DialContext(ctx, network, addrOrHost)
 	}
 }

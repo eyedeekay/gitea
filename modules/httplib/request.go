@@ -15,9 +15,22 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
 var defaultSetting = Settings{"GiteaServer", 60 * time.Second, 60 * time.Second, nil, nil}
+
+var p = proxy.FromEnvironment()
+
+// DefaultDialer allows a user to override the default dialer across all of gitea, including
+// HTTP, HTTPS, and SMTP connections, but **not** LDAP. This is useful for making gitea honor
+// outgoing proxy connections, the default in this example will use the system/environment proxy
+// settings.
+var DefaultDialer = proxy.NewPerHost(proxy.FromEnvironmentUsing(&net.Dialer{
+	Timeout:   30 * time.Second,
+	KeepAlive: 30 * time.Second,
+}), nil)
 
 // newRequest returns *Request with specific method
 func newRequest(url, method string) *Request {
@@ -192,7 +205,9 @@ func (r *Request) Response() (*http.Response, error) {
 // TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.
 func TimeoutDialer(cTimeout time.Duration) func(ctx context.Context, net, addr string) (c net.Conn, err error) {
 	return func(ctx context.Context, netw, addr string) (net.Conn, error) {
-		d := net.Dialer{Timeout: cTimeout}
+		d := proxy.NewPerHost(proxy.FromEnvironmentUsing(&net.Dialer{
+			Timeout: cTimeout,
+		}), nil)
 		conn, err := d.DialContext(ctx, netw, addr)
 		if err != nil {
 			return nil, err

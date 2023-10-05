@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"code.gitea.io/gitea/modules/httplib"
 	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/process"
 	"code.gitea.io/gitea/modules/setting"
@@ -82,9 +83,11 @@ func processIncomingEmails(ctx context.Context) error {
 	var c *client.Client
 	var err error
 	if setting.IncomingEmail.UseTLS {
-		c, err = client.DialTLS(server, &tls.Config{InsecureSkipVerify: setting.IncomingEmail.SkipTLSVerify})
+		d := httplib.DefaultDialer
+		c, err = client.DialWithDialerTLS(d, server, &tls.Config{InsecureSkipVerify: setting.IncomingEmail.SkipTLSVerify})
 	} else {
-		c, err = client.Dial(server)
+		d := httplib.DefaultDialer
+		c, err = client.DialWithDialer(d, server)
 	}
 	if err != nil {
 		return fmt.Errorf("could not connect to server '%s': %w", server, err)

@@ -15,6 +15,7 @@ import (
 	issues_model "code.gitea.io/gitea/models/issues"
 	"code.gitea.io/gitea/models/unittest"
 	user_model "code.gitea.io/gitea/models/user"
+	"code.gitea.io/gitea/modules/httplib"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/services/mailer/incoming"
 	incoming_payload "code.gitea.io/gitea/services/mailer/incoming/payload"
@@ -213,7 +214,8 @@ func TestIncomingEmail(t *testing.T) {
 type smtpTestSender struct{}
 
 func (s *smtpTestSender) Send(from string, to []string, msg io.WriterTo) error {
-	conn, err := net.Dial("tcp", net.JoinHostPort(setting.IncomingEmail.Host, "25"))
+	d := httplib.DefaultDialer
+	conn, err := d.Dial("tcp", net.JoinHostPort(setting.IncomingEmail.Host, "25"))
 	if err != nil {
 		return err
 	}

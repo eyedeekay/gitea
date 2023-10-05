@@ -11,6 +11,8 @@ import (
 	"net/smtp"
 	"os"
 	"strconv"
+
+	"code.gitea.io/gitea/modules/httplib"
 )
 
 //   _________   __________________________
@@ -59,8 +61,8 @@ func Authenticate(a smtp.Auth, source *Source) error {
 		InsecureSkipVerify: source.SkipVerify,
 		ServerName:         source.Host,
 	}
-
-	conn, err := net.Dial("tcp", net.JoinHostPort(source.Host, strconv.Itoa(source.Port)))
+	d := httplib.DefaultDialer
+	conn, err := d.Dial("tcp", net.JoinHostPort(source.Host, strconv.Itoa(source.Port)))
 	if err != nil {
 		return err
 	}

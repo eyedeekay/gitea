@@ -20,6 +20,7 @@ import (
 
 	"code.gitea.io/gitea/modules/base"
 	"code.gitea.io/gitea/modules/graceful"
+	"code.gitea.io/gitea/modules/httplib"
 	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/process"
 	"code.gitea.io/gitea/modules/queue"
@@ -192,8 +193,8 @@ func (s *smtpSender) Send(from string, to []string, msg io.WriterTo) error {
 		network = "tcp"
 		address = net.JoinHostPort(opts.SMTPAddr, opts.SMTPPort)
 	}
-
-	conn, err := net.Dial(network, address)
+	d := httplib.DefaultDialer
+	conn, err := d.Dial(network, address)
 	if err != nil {
 		return fmt.Errorf("failed to establish network connection to SMTP server: %w", err)
 	}

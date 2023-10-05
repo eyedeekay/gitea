@@ -52,7 +52,7 @@ Ensure you are running in the correct environment or set the correct configurati
 	if setting.Protocol == setting.HTTPUnix {
 		req.SetTransport(&http.Transport{
 			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-				var d net.Dialer
+				d := httplib.DefaultDialer
 				conn, err := d.DialContext(ctx, "unix", setting.HTTPAddr)
 				if err != nil {
 					return conn, err
@@ -69,7 +69,7 @@ Ensure you are running in the correct environment or set the correct configurati
 	} else if setting.LocalUseProxyProtocol {
 		req.SetTransport(&http.Transport{
 			DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
-				var d net.Dialer
+				d := httplib.DefaultDialer
 				conn, err := d.DialContext(ctx, network, address)
 				if err != nil {
 					return conn, err
