@@ -24,9 +24,8 @@ var defaultSetting = Settings{"GiteaServer", 60 * time.Second, 60 * time.Second,
 var p = proxy.FromEnvironment()
 
 // DefaultDialer allows a user to override the default dialer across all of gitea, including
-// HTTP, HTTPS, and SMTP connections, but **not** LDAP. This is useful for making gitea honor
-// outgoing proxy connections, the default in this example will use the system/environment proxy
-// settings.
+// HTTP, HTTPS, SMTP and LDAP. This is useful for making gitea honor  outgoing proxy connections,
+// the default in this example will use the system/environment proxy settings.
 var DefaultDialer = proxy.NewPerHost(proxy.FromEnvironmentUsing(&net.Dialer{
 	Timeout:   30 * time.Second,
 	KeepAlive: 30 * time.Second,

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"code.gitea.io/gitea/modules/container"
+	"code.gitea.io/gitea/modules/httplib"
 	"code.gitea.io/gitea/modules/log"
 
 	"github.com/go-ldap/ldap/v3"
@@ -117,12 +118,18 @@ func dial(source *Source) (*ldap.Conn, error) {
 	}
 
 	if source.SecurityProtocol == SecurityProtocolLDAPS {
-		return ldap.DialTLS("tcp", net.JoinHostPort(source.Host, strconv.Itoa(source.Port)), tlsConfig)
+		innerConn, err := httplib.DefaultDialer.Dial("tcp", net.JoinHostPort(source.Host, strconv.Itoa(source.Port)))
+		if err != nil {
+			return nil, fmt.Errorf("error during DialTLS: %w", err)
+		}
+		outerConn := tls.Client(innerConn, tlsConfig)
+		return ldap.NewConn(outerConn, true), nil
 	}
-	conn, err := ldap.Dial("tcp", net.JoinHostPort(source.Host, strconv.Itoa(source.Port)))
+	innerConn, err := httplib.DefaultDialer.Dial("tcp", net.JoinHostPort(source.Host, strconv.Itoa(source.Port)))
 	if err != nil {
 		return nil, fmt.Errorf("error during Dial: %w", err)
 	}
+	conn := ldap.NewConn(innerConn, false)
 
 	if source.SecurityProtocol == SecurityProtocolStartTLS {
 		if err = conn.StartTLS(tlsConfig); err != nil {
